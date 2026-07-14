@@ -61,6 +61,8 @@ set(SOURCES
     src/Commands/Wait.h
     src/Commands/WaitForItem.cpp
     src/Commands/WaitForItem.h
+    src/Commands/Synchronize.cpp
+    src/Commands/Synchronize.h
 
     src/CommandExecuter/CommandEnvironment.cpp
     src/CommandExecuter/CommandExecuter.cpp
@@ -91,7 +93,9 @@ source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} PREFIX source FILES ${SOURCES})
 #
 # Target
 #
-add_library(SpixCore ${SOURCES})
+add_library(SpixCore ${SOURCES}
+    src/Commands/Synchronize.cpp
+    src/Commands/Synchronize.h)
 target_include_directories(SpixCore
     PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -120,6 +124,14 @@ generate_export_header(SpixCore
 #
 install(
     TARGETS SpixCore
+    EXPORT SpixCoreTargets
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+)
+
+install(
+    TARGETS anyrpc
     EXPORT SpixCoreTargets
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}

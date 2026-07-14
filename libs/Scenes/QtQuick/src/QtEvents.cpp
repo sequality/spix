@@ -103,7 +103,8 @@ void QtEvents::mouseDown(Item* item, Point loc, MouseButton button, KeyModifier 
     Qt::MouseButtons activeButtons = getQtMouseButtonValue(m_pressedMouseButtons);
 
     auto qtmod = getQtKeyboardModifiers(mod);
-    QMouseEvent* event = new QMouseEvent(QEvent::MouseButtonPress, windowLoc, eventCausingButton, activeButtons, qtmod);
+
+    QMouseEvent* event = new QMouseEvent(QEvent::MouseButtonPress, windowLoc, QPointF(0,0), eventCausingButton, activeButtons, qtmod);
     QGuiApplication::postEvent(window, event);
 }
 
@@ -127,7 +128,7 @@ void QtEvents::mouseUp(Item* item, Point loc, MouseButton button, KeyModifier mo
 #endif
     auto qtmod = getQtKeyboardModifiers(mod);
     QMouseEvent* event
-        = new QMouseEvent(QEvent::MouseButtonRelease, windowLoc, eventCausingButton, activeButtons, qtmod);
+        = new QMouseEvent(QEvent::MouseButtonRelease, windowLoc, QPointF(0,0), eventCausingButton, activeButtons, qtmod);
     QGuiApplication::postEvent(window, event);
 }
 
@@ -143,13 +144,13 @@ void QtEvents::mouseMove(Item* item, Point loc)
     // Wiggle the cursor a bit. This is needed to correctly recognize drag events
     windowLoc.rx() -= 1;
     QMouseEvent* mouseMoveEvent
-        = new QMouseEvent(QEvent::MouseMove, windowLoc, Qt::MouseButton::NoButton, activeButtons, Qt::NoModifier);
+        = new QMouseEvent(QEvent::MouseMove, windowLoc, QPointF(0,0), Qt::MouseButton::NoButton, activeButtons, Qt::NoModifier);
     QGuiApplication::postEvent(window, mouseMoveEvent);
 
     // Wiggle the cursor a bit. This is needed to correctly recognize drag events
     windowLoc.rx() += 1;
     mouseMoveEvent
-        = new QMouseEvent(QEvent::MouseMove, windowLoc, Qt::MouseButton::NoButton, activeButtons, Qt::NoModifier);
+        = new QMouseEvent(QEvent::MouseMove, windowLoc, QPointF(0,0), Qt::MouseButton::NoButton, activeButtons, Qt::NoModifier);
     QGuiApplication::postEvent(window, mouseMoveEvent);
 }
 
@@ -159,10 +160,10 @@ void QtEvents::stringInput(Item* item, const std::string& text)
     if (!qtitem)
         return;
 
-    auto window = qtitem->qquickitem()->window();
+    auto receivingItem = qtitem->qquickitem();
 
     auto keyDownEvent = new QKeyEvent(QEvent::KeyPress, 0 /* key id */, Qt::NoModifier, QString::fromStdString(text));
-    QGuiApplication::postEvent(window, keyDownEvent);
+    QGuiApplication::postEvent(receivingItem, keyDownEvent);
 }
 
 void QtEvents::keyPress(Item* item, int keyCode, KeyModifier mod)

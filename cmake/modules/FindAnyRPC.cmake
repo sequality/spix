@@ -1,5 +1,12 @@
 include(FindPackageHandleStandardArgs)
 
+# When Spix builds AnyRPC itself (FetchContent, see the top-level CMakeLists),
+# the target already exists and there is nothing to search for on the system.
+if(TARGET AnyRPC::anyrpc)
+  set(AnyRPC_FOUND TRUE)
+  return()
+endif()
+
 find_path(AnyRPC_INCLUDE_DIRS anyrpc/anyrpc.h)
 find_library(AnyRPC_LIBRARIES NAMES anyrpc)
 

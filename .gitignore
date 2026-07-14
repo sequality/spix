@@ -10,3 +10,4 @@ dep-libs
 deps
 deps-install
 tmp
+.qtcreator

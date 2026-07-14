@@ -27,6 +27,7 @@
 #include <Commands/SetProperty.h>
 #include <Commands/Wait.h>
 #include <Commands/WaitForItem.h>
+#include <Commands/Synchronize.h>
 
 #include <Spix/Events/Identifiers.h>
 
@@ -175,6 +176,16 @@ std::vector<std::string> TestServer::getErrors()
     std::promise<std::vector<std::string>> promise;
     auto result = promise.get_future();
     auto cmd = std::make_unique<cmd::GetTestStatus>(true, std::move(promise));
+    m_cmdExec->enqueueCommand(std::move(cmd));
+
+    return result.get();
+}
+
+void TestServer::synchronize()
+{
+    std::promise<void> promise;
+    auto result = promise.get_future();
+    auto cmd = std::make_unique<cmd::Synchronize>(std::move(promise));
     m_cmdExec->enqueueCommand(std::move(cmd));
 
     return result.get();

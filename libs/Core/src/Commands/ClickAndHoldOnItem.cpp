@@ -6,9 +6,9 @@ namespace spix {
 namespace cmd {
 
 ClickAndHoldOnItem::ClickAndHoldOnItem(ItemPosition path, std::chrono::milliseconds holdTime, MouseButton mouseButton)
-: m_holdTime(holdTime)
-, m_position(std::move(path))
+: m_position(std::move(path))
 , m_mouseButton(mouseButton)
+, m_holdTime(holdTime)
 {
 }
 

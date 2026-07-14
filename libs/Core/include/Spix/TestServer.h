@@ -68,6 +68,7 @@ public:
     Rect getBoundingBox(ItemPath path);
     bool existsAndVisible(ItemPath path);
     std::vector<std::string> getErrors();
+    void synchronize();
     bool waitForItem(ItemPath path, std::chrono::milliseconds maxWaitTime);
 
     void takeScreenshot(ItemPath targetItem, std::string filePath);

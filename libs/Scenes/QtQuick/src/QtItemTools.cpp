@@ -79,9 +79,13 @@ void ForEachChild(QObject* object, const std::function<bool(QObject*)>& callback
         }
     }
 
-    // Handle QQuickItems and their childItems()
+    // Iterate a copy of the child list, not the live one: descending into a
+    // child can apparently create new siblings (e.g. a Repeater lazily incubating
+    // delegates into its parent), reallocating the live buffer and invalidating
+    // the iterator which causes use after free -> crash
     if (auto quickItem = qobject_cast<QQuickItem*>(object)) {
-        for (auto* childItem : quickItem->childItems()) {
+        const QList<QQuickItem*> childItems = quickItem->childItems();
+        for (auto* childItem : childItems) {
             if (!callback(childItem)) {
                 return; // Stop iteration if callback returns false
             }
@@ -89,7 +93,8 @@ void ForEachChild(QObject* object, const std::function<bool(QObject*)>& callback
     }
     // Handle regular QObjects and their children()
     else {
-        for (auto* child : object->children()) {
+        const QObjectList children = object->children();
+        for (auto* child : children) {
             if (!callback(child)) {
                 return; // Stop iteration if callback returns false
             }
@@ -208,7 +213,7 @@ Variant QVariantToVariant(const QVariant& var)
         return QVariantToVariant(jsval.toVariant());
     }
 
-    if (var.canConvert(QMetaType::Type::QVariantList)) {
+    if (var.canConvert<QVariantList>()) {
         const QVariantList& list = var.toList();
         Variant::ListType ret;
         for (const QVariant& elem : list) {
@@ -218,7 +223,7 @@ Variant QVariantToVariant(const QVariant& var)
         return Variant(ret);
     }
 
-    if (var.canConvert(QMetaType::Type::QVariantMap)) {
+    if (var.canConvert<QVariantMap>()) {
         const QVariantMap& map = var.toMap();
         Variant::MapType ret;
         for (auto ptr = map.constBegin(); ptr != map.constEnd(); ptr++) {
@@ -228,7 +233,7 @@ Variant QVariantToVariant(const QVariant& var)
         return Variant(ret);
     }
 
-    if (var.canConvert(QMetaType::Type::QString)) {
+    if (var.canConvert<QString>()) {
         return Variant(var.toString().toStdString());
     }
 
@@ -263,11 +268,11 @@ Variant QMLReturnVariantToVariant(const QMLReturnVariant& var)
 
 bool CanConvertArgTypes(const QMetaMethod& metaMethod, const std::vector<QVariant>& varargs)
 {
-    if (metaMethod.parameterCount() != varargs.size())
+    if ((size_t)metaMethod.parameterCount() != varargs.size())
         return false;
-    for (size_t i = 0; i < metaMethod.parameterCount(); i++) {
-        int targetType = metaMethod.parameterType(i);
-        if (targetType != QMetaType::Type::QVariant && !varargs[i].canConvert(targetType))
+    for (size_t i = 0; i < (size_t)metaMethod.parameterCount(); i++) {
+        auto targetType = metaMethod.parameterType(i);
+        if (targetType != QMetaType::Type::QVariant && !varargs[i].canConvert(metaMethod.parameterMetaType(i)))
             return false;
     }
     return true;
@@ -277,7 +282,7 @@ bool GetMethodMetaForArgs(
     const QObject& obj, const std::string& method, const std::vector<QVariant>& varargs, QMetaMethod& ret)
 {
     const QMetaObject* itemMeta = obj.metaObject();
-    for (size_t i = 0; i < itemMeta->methodCount(); i++) {
+    for (size_t i = 0; i < (size_t)itemMeta->methodCount(); i++) {
         const QMetaMethod methodMeta = itemMeta->method(i);
         if (methodMeta.name().compare(method.data()) == 0 && CanConvertArgTypes(methodMeta, varargs)) {
             ret = methodMeta;
@@ -295,7 +300,7 @@ std::vector<QGenericArgument> ConvertAndCreateQArgumentsForMethod(
         if (i < varargs.size()) {
             int targetType = metaMethod.parameterType(i);
             if (targetType != QMetaType::Type::QVariant) {
-                varargs[i].convert(targetType);
+                varargs[i].convert(metaMethod.parameterMetaType(i));
                 qtArgs.push_back(QGenericArgument(varargs[i].typeName(), varargs[i].data()));
             } else {
                 qtArgs.push_back(QArgument<QVariant>("QVariant", varargs[i]));
