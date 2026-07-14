@@ -26,6 +26,7 @@ public:
     virtual void keyPress(Item* item, int keyCode, KeyModifier mod) = 0;
     virtual void keyRelease(Item* item, int keyCode, KeyModifier mod) = 0;
     virtual void extMouseDrop(Item* item, Point loc, PasteboardContent& content) = 0;
+    virtual void scroll(Item* item, int angle) = 0;
     virtual void quit() = 0;
 };
 

@@ -11,6 +11,7 @@
 
 #include <Spix/Data/PasteboardContent.h>
 
+#include <QElapsedTimer>
 #include <QGuiApplication>
 #include <QObject>
 #include <QQuickItem>
@@ -74,6 +75,28 @@ Qt::KeyboardModifiers getQtKeyboardModifiers(KeyModifier mod)
     }
 
     return qtmod;
+}
+
+/**
+ * QQuickFlickable derives the flick velocity from the time between two wheel events
+ * and drops any event that is not strictly newer than the one before. Events that do
+ * not come from the platform plugin have a timestamp of zero, so we supply our own.
+ */
+quint64 nextWheelEventTimestamp()
+{
+    static QElapsedTimer timer = [] {
+        QElapsedTimer t;
+        t.start();
+        return t;
+    }();
+    static quint64 lastTimestamp = 0;
+
+    auto timestamp = static_cast<quint64>(timer.elapsed());
+    if (timestamp <= lastTimestamp)
+        timestamp = lastTimestamp + 1;
+    lastTimestamp = timestamp;
+
+    return timestamp;
 }
 
 void sendQtKeyEvent(Item* item, bool press, int keyCode, KeyModifier mod)
@@ -152,6 +175,23 @@ void QtEvents::mouseMove(Item* item, Point loc)
     mouseMoveEvent
         = new QMouseEvent(QEvent::MouseMove, windowLoc, QPointF(0,0), Qt::MouseButton::NoButton, activeButtons, Qt::NoModifier);
     QGuiApplication::postEvent(window, mouseMoveEvent);
+}
+
+void QtEvents::scroll(Item* item, int angle)
+{
+    QPointF windowLoc;
+    auto itemSize = item->size();
+    // getWindowAndPositionForItem expects a point in item coordinates
+    auto itemCenter = Point(itemSize.width / 2, itemSize.height / 2);
+    auto window = getWindowAndPositionForItem(item, itemCenter, windowLoc);
+    if (!window)
+        return;
+
+    QWheelEvent* event = new QWheelEvent(windowLoc, window->mapToGlobal(windowLoc.toPoint()), QPoint(0, 0),
+        QPoint(0, angle), Qt::NoButton, Qt::NoModifier, Qt::NoScrollPhase, false);
+    event->setTimestamp(nextWheelEventTimestamp());
+
+    QGuiApplication::postEvent(window, event);
 }
 
 void QtEvents::stringInput(Item* item, const std::string& text)

@@ -19,6 +19,7 @@ public:
     void keyPress(Item* item, int keyCode, KeyModifier mod) override;
     void keyRelease(Item* item, int keyCode, KeyModifier mod) override;
     void extMouseDrop(Item* item, Point loc, PasteboardContent& content) override;
+    void scroll(Item* item, int angle) override;
     void quit() override;
 
 private:

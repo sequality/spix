@@ -61,6 +61,10 @@ AnyRpcServer::AnyRpcServer(int anyrpcPort)
         "Click and hold on the object at the given path | mouseClickAndHold(string path, int holdTime)",
         [this](std::string path, int ms) { mouseClickAndHold(std::move(path), std::chrono::milliseconds(ms)); });
 
+    utils::AddFunctionToAnyRpc<void(std::string, int)>(methodManager, "scroll",
+        "Scroll at the object at the given path (negative angle = scroll down) | scroll(string path, int angle)",
+        [this](std::string path, int angle) { mouseScroll(std::move(path), angle); });
+
     utils::AddFunctionToAnyRpc<void(std::string)>(methodManager, "mouseBeginDrag",
         "Begin a drag with the mouse | mouseBeginDrag(string path)",
         [this](std::string path) { mouseBeginDrag(std::move(path)); });

@@ -10,6 +10,7 @@
 
 #include <Commands/ClickOnItem.h>
 #include <Commands/ClickAndHoldOnItem.h>
+#include <Commands/Scroll.h>
 #include <Commands/CustomCmd.h>
 #include <Commands/DragBegin.h>
 #include <Commands/DragEnd.h>
@@ -93,6 +94,11 @@ void TestServer::mouseClick(ItemPath path, MouseButton mouseButton, KeyModifier 
 void TestServer::mouseClickAndHold(ItemPath path, std::chrono::milliseconds holdTime)
 {
     m_cmdExec->enqueueCommand<cmd::ClickAndHoldOnItem>(path, holdTime, spix::MouseButtons::Left);
+}
+
+void TestServer::mouseScroll(ItemPath path, int angle)
+{
+    m_cmdExec->enqueueCommand<cmd::Scroll>(path, angle);
 }
 
 void TestServer::mouseBeginDrag(ItemPath path)

@@ -63,6 +63,8 @@ set(SOURCES
     src/Commands/WaitForItem.h
     src/Commands/Synchronize.cpp
     src/Commands/Synchronize.h
+    src/Commands/Scroll.cpp
+    src/Commands/Scroll.h
 
     src/CommandExecuter/CommandEnvironment.cpp
     src/CommandExecuter/CommandExecuter.cpp
@@ -95,7 +97,9 @@ source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} PREFIX source FILES ${SOURCES})
 #
 add_library(SpixCore ${SOURCES}
     src/Commands/Synchronize.cpp
-    src/Commands/Synchronize.h)
+    src/Commands/Synchronize.h
+    src/Commands/Scroll.cpp
+    src/Commands/Scroll.h)
 target_include_directories(SpixCore
     PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>

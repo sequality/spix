@@ -53,7 +53,9 @@ public:
     void mouseClick(ItemPath path, MouseButton mouseButton, KeyModifier keyModifier = spix::KeyModifiers::None);
     
     void mouseClickAndHold(ItemPath path, std::chrono::milliseconds holdTime);
-    
+
+    void mouseScroll(ItemPath path, int angle);
+
     void mouseBeginDrag(ItemPath path);
     void mouseEndDrag(ItemPath path);
     void mouseDropUrls(ItemPath path, const std::vector<std::string>& urls);
