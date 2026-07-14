@@ -24,6 +24,8 @@ set(SOURCES
 
     src/Commands/ClickOnItem.cpp
     src/Commands/ClickOnItem.h
+    src/Commands/ClickAndHoldOnItem.cpp
+    src/Commands/ClickAndHoldOnItem.h
     src/Commands/Command.cpp
     src/Commands/CustomCmd.cpp
     src/Commands/CustomCmd.h

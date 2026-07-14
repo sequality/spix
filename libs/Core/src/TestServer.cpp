@@ -9,6 +9,7 @@
 #include <Spix/CommandExecuter/CommandExecuter.h>
 
 #include <Commands/ClickOnItem.h>
+#include <Commands/ClickAndHoldOnItem.h>
 #include <Commands/CustomCmd.h>
 #include <Commands/DragBegin.h>
 #include <Commands/DragEnd.h>
@@ -86,6 +87,11 @@ void TestServer::mouseClick(ItemPath path, Point proportion, Point offset)
 void TestServer::mouseClick(ItemPath path, MouseButton mouseButton, KeyModifier keyModifier)
 {
     m_cmdExec->enqueueCommand<cmd::ClickOnItem>(path, mouseButton, keyModifier);
+}
+
+void TestServer::mouseClickAndHold(ItemPath path, std::chrono::milliseconds holdTime)
+{
+    m_cmdExec->enqueueCommand<cmd::ClickAndHoldOnItem>(path, holdTime, spix::MouseButtons::Left);
 }
 
 void TestServer::mouseBeginDrag(ItemPath path)

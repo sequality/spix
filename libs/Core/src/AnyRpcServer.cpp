@@ -57,6 +57,10 @@ AnyRpcServer::AnyRpcServer(int anyrpcPort)
             mouseClick(std::move(path), proportion);
         });
 
+    utils::AddFunctionToAnyRpc<void(std::string, int)>(methodManager, "mouseClickAndHold",
+        "Click and hold on the object at the given path | mouseClickAndHold(string path, int holdTime)",
+        [this](std::string path, int ms) { mouseClickAndHold(std::move(path), std::chrono::milliseconds(ms)); });
+
     utils::AddFunctionToAnyRpc<void(std::string)>(methodManager, "mouseBeginDrag",
         "Begin a drag with the mouse | mouseBeginDrag(string path)",
         [this](std::string path) { mouseBeginDrag(std::move(path)); });
