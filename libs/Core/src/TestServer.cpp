@@ -29,6 +29,7 @@
 #include <Commands/Wait.h>
 #include <Commands/WaitForItem.h>
 #include <Commands/Synchronize.h>
+#include <Commands/ClearErrors.h>
 
 #include <Spix/Events/Identifiers.h>
 
@@ -220,6 +221,11 @@ std::string TestServer::takeScreenshotAsBase64(ItemPath targetItem)
     m_cmdExec->enqueueCommand(std::move(cmd));
 
     return result.get();
+}
+
+void TestServer::clearErrors()
+{
+    m_cmdExec->enqueueCommand<cmd::ClearErrors>();
 }
 
 void TestServer::quit()

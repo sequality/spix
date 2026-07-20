@@ -65,6 +65,8 @@ set(SOURCES
     src/Commands/Synchronize.h
     src/Commands/Scroll.cpp
     src/Commands/Scroll.h
+    src/Commands/ClearErrors.cpp
+    src/Commands/ClearErrors.h
 
     src/CommandExecuter/CommandEnvironment.cpp
     src/CommandExecuter/CommandExecuter.cpp
@@ -99,7 +101,9 @@ add_library(SpixCore ${SOURCES}
     src/Commands/Synchronize.cpp
     src/Commands/Synchronize.h
     src/Commands/Scroll.cpp
-    src/Commands/Scroll.h)
+    src/Commands/Scroll.h
+    src/Commands/ClearErrors.cpp
+    src/Commands/ClearErrors.h)
 target_include_directories(SpixCore
     PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>

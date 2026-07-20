@@ -22,6 +22,7 @@ public:
     void reportError(CommandError error);
     bool hasErrors() const;
     Errors errors() const;
+    void clearErrors();
     std::string errorsDescription() const;
 
 private:

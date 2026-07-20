@@ -140,6 +140,8 @@ AnyRpcServer::AnyRpcServer(int anyrpcPort)
         "Take a screenshot of the object and send as base64 string | takeScreenshotAsBase64(string pathToTargetedItem)",
         [this](std::string targetItem) { return takeScreenshotAsBase64(std::move(targetItem)); });
 
+    utils::AddFunctionToAnyRpc<void()>(methodManager, "clearErrors", "Clear the Spix errors | clearErrors()", [this] { clearErrors(); });
+
     utils::AddFunctionToAnyRpc<void()>(methodManager, "quit", "Close the app | quit()", [this] { quit(); });
 
     utils::AddFunctionToAnyRpc<void(std::string, std::string)>(methodManager, "command",

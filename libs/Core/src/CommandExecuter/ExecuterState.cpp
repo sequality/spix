@@ -23,6 +23,11 @@ ExecuterState::Errors ExecuterState::errors() const
     return m_errors;
 }
 
+void ExecuterState::clearErrors()
+{
+    m_errors.clear();
+}
+
 std::string ExecuterState::errorsDescription() const
 {
     std::string description;

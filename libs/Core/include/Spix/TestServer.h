@@ -75,6 +75,7 @@ public:
 
     void takeScreenshot(ItemPath targetItem, std::string filePath);
     std::string takeScreenshotAsBase64(ItemPath targetItem);
+    void clearErrors();
     void quit();
 
 protected:
