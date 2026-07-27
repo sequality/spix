@@ -65,6 +65,10 @@ AnyRpcServer::AnyRpcServer(int anyrpcPort)
         "Scroll at the object at the given path (negative angle = scroll down) | scroll(string path, int angle)",
         [this](std::string path, int angle) { mouseScroll(std::move(path), angle); });
 
+    utils::AddFunctionToAnyRpc<void(std::string)>(methodManager, "scrollIntoView",
+        "Scroll the object at the given path into view within its scrollable ancestors | scrollIntoView(string path)",
+        [this](std::string path) { scrollIntoView(std::move(path)); });
+
     utils::AddFunctionToAnyRpc<void(std::string)>(methodManager, "mouseBeginDrag",
         "Begin a drag with the mouse | mouseBeginDrag(string path)",
         [this](std::string path) { mouseBeginDrag(std::move(path)); });
@@ -112,8 +116,15 @@ AnyRpcServer::AnyRpcServer(int anyrpcPort)
             return std::vector<double> {bounds.topLeft.x, bounds.topLeft.y, bounds.size.width, bounds.size.height};
         });
 
+    utils::AddFunctionToAnyRpc<bool(std::string)>(methodManager, "exists",
+        "Returns true if the given path resolves to an item (no visibility or geometry check) | exists(string path) : "
+        "bool exists",
+        [this](std::string path) { return exists(std::move(path)); });
+
     utils::AddFunctionToAnyRpc<bool(std::string)>(methodManager, "existsAndVisible",
-        "Returns true if the given object exists | existsAndVisible(string path) : bool exists_and_visible",
+        "Returns true if the object exists and is actually visible within the viewport (not scrolled out, clipped, or "
+        "zero-size). For the raw 'visible' property use getStringProperty. | existsAndVisible(string path) : bool "
+        "exists_and_visible",
         [this](std::string path) { return existsAndVisible(std::move(path)); });
 
     utils::AddFunctionToAnyRpc<bool(std::string, int)>(methodManager, "waitForItem",

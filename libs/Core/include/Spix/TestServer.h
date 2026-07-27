@@ -55,6 +55,7 @@ public:
     void mouseClickAndHold(ItemPath path, std::chrono::milliseconds holdTime);
 
     void mouseScroll(ItemPath path, int angle);
+    void scrollIntoView(ItemPath path);
 
     void mouseBeginDrag(ItemPath path);
     void mouseEndDrag(ItemPath path);
@@ -68,6 +69,7 @@ public:
     void setStringProperty(ItemPath path, std::string propertyName, std::string propertyValue);
     Variant invokeMethod(ItemPath path, std::string method, std::vector<Variant> args);
     Rect getBoundingBox(ItemPath path);
+    bool exists(ItemPath path);
     bool existsAndVisible(ItemPath path);
     std::vector<std::string> getErrors();
     void synchronize();

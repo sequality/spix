@@ -28,6 +28,12 @@ void ClickOnItem::execute(CommandEnvironment& env)
         return;
     }
 
+    if (!item->visibleOnScreen()) {
+        env.state().reportError(
+            "ClickOnItem: Item not visible on screen (off-viewport, hidden, or zero-size): " + path.string());
+        return;
+    }
+
     auto size = item->size();
     auto mousePoint = m_position.positionForItemSize(size);
     env.scene().events().mouseDown(item.get(), mousePoint, m_mouseButton, m_keyModifier);

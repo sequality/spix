@@ -21,8 +21,11 @@ void ExistsAndVisible::execute(CommandEnvironment& env)
 {
     auto item = env.scene().itemAtPath(m_path);
 
+    // Viewport-aware: an item that exists but is scrolled out of view, clipped
+    // away, or zero-sized counts as not visible. For the raw visibility-property
+    // value use getStringProperty(path, "visible").
     if (item) {
-        m_promise.set_value(item->visible());
+        m_promise.set_value(item->visibleOnScreen());
     } else {
         m_promise.set_value(false);
     }

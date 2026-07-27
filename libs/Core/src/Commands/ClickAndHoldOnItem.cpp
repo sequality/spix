@@ -40,6 +40,14 @@ void ClickAndHoldOnItem::pressOrRelease(CommandEnvironment& env, bool isRelease)
         return;
     }
 
+    // Only guard the initial press: the release must always be delivered to
+    // match the earlier press, even if the item scrolled away in between.
+    if (!isRelease && !item->visibleOnScreen()) {
+        env.state().reportError(
+            "ClickAndHoldOnItem: Item not visible on screen (off-viewport, hidden, or zero-size): " + path.string());
+        return;
+    }
+
     auto size = item->size();
     auto mousePoint = m_position.positionForItemSize(size);
     if (!isRelease) {

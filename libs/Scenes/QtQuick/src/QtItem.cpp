@@ -6,11 +6,116 @@
 
 #include "QtItem.h"
 
+#include <QMetaEnum>
 #include <QMetaObject>
+#include <QMetaProperty>
 #include <QQuickItem>
 #include <QQuickWindow>
+#include <QRectF>
+#include <QVariant>
 
 #include <QtItemTools.h>
+
+namespace {
+
+// The moving content holder of a QQuickFlickable (its `contentItem` property).
+QQuickItem* flickableContentItem(QQuickItem* flickable)
+{
+    return flickable->property("contentItem").value<QQuickItem*>();
+}
+
+// Which axes the flickable is allowed to scroll, read from its
+// `flickableDirection` enum via the meta-object (so we depend on neither the
+// private QQuickFlickable header nor hard-coded enum values). Unknown/auto
+// directions leave both axes allowed, to be gated by actual overflow.
+void flickAxesAllowed(QQuickItem* flickable, bool& horizAllowed, bool& vertAllowed)
+{
+    horizAllowed = true;
+    vertAllowed = true;
+
+    const QMetaObject* meta = flickable->metaObject();
+    const int propIndex = meta->indexOfProperty("flickableDirection");
+    if (propIndex < 0) {
+        return;
+    }
+    const QMetaEnum metaEnum = meta->property(propIndex).enumerator();
+    if (!metaEnum.isValid()) {
+        return;
+    }
+
+    const int current = flickable->property("flickableDirection").toInt();
+    const int verticalOnly = metaEnum.keyToValue("VerticalFlick");
+    const int horizontalOnly = metaEnum.keyToValue("HorizontalFlick");
+
+    if (verticalOnly >= 0 && current == verticalOnly) {
+        horizAllowed = false;
+    }
+    if (horizontalOnly >= 0 && current == horizontalOnly) {
+        vertAllowed = false;
+    }
+}
+
+// Adjust a Flickable's contentX/contentY so that `target`'s rectangle lies
+// inside the flickable's viewport, scrolling as little as necessary. Works for
+// any QQuickFlickable subclass (Flickable, ListView, GridView, ScrollView's
+// inner flickable), since they all share the contentX/contentY offset.
+void scrollFlickableToShow(QQuickItem* flickable, QQuickItem* target)
+{
+    auto* content = flickableContentItem(flickable);
+    if (!content) {
+        return;
+    }
+
+    // target rectangle expressed in the flickable's content coordinates
+    const QRectF r = target->mapRectToItem(content, QRectF(0, 0, target->width(), target->height()));
+
+    const qreal viewportW = flickable->width();
+    const qreal viewportH = flickable->height();
+    const qreal contentW = flickable->property("contentWidth").toReal();
+    const qreal contentH = flickable->property("contentHeight").toReal();
+
+    // Only move an axis that this flickable is actually allowed to scroll AND
+    // that has real overflow. This keeps a vertical-only flickable from being
+    // nudged horizontally (and vice versa) even if it reports a content size
+    // slightly larger than its viewport (margins, scrollbar insets, ...).
+    bool horizAllowed = true;
+    bool vertAllowed = true;
+    flickAxesAllowed(flickable, horizAllowed, vertAllowed);
+
+    const qreal overflowEpsilon = 1.0;
+    const bool scrollX = horizAllowed && (contentW > viewportW + overflowEpsilon);
+    const bool scrollY = vertAllowed && (contentH > viewportH + overflowEpsilon);
+
+    if (scrollX) {
+        qreal contentX = flickable->property("contentX").toReal();
+        qreal newX = contentX;
+        if (r.left() < contentX) {
+            newX = r.left();
+        } else if (r.right() > contentX + viewportW) {
+            newX = r.right() - viewportW;
+        }
+        newX = qBound(qreal(0), newX, contentW - viewportW);
+        if (qAbs(newX - contentX) > 0.5) {
+            flickable->setProperty("contentX", newX);
+        }
+    }
+
+    if (scrollY) {
+        qreal contentY = flickable->property("contentY").toReal();
+        qreal newY = contentY;
+        if (r.top() < contentY) {
+            newY = r.top();
+        } else if (r.bottom() > contentY + viewportH) {
+            newY = r.bottom() - viewportH;
+        }
+        newY = qBound(qreal(0), newY, contentH - viewportH);
+        if (qAbs(newY - contentY) > 0.5) {
+            flickable->setProperty("contentY", newY);
+        }
+    }
+}
+
+} // namespace
 
 namespace spix {
 
@@ -88,6 +193,59 @@ bool QtItem::invokeMethod(const std::string& method, const std::vector<Variant>&
 bool QtItem::visible() const
 {
     return qquickitem()->isVisible();
+}
+
+bool QtItem::visibleOnScreen() const
+{
+    const QQuickItem* item = qquickitem();
+    if (!item || !item->isVisible()) {
+        return false;
+    }
+    if (item->width() <= 0 || item->height() <= 0) {
+        return false;
+    }
+
+    const QQuickWindow* window = item->window();
+    if (!window) {
+        return false;
+    }
+
+    // The item's rectangle in scene coordinates...
+    QRectF visibleRect = item->mapRectToScene(QRectF(0, 0, item->width(), item->height()));
+
+    // ...clipped to the window bounds...
+    visibleRect = visibleRect.intersected(QRectF(0, 0, window->width(), window->height()));
+
+    // ...and clipped to every clipping ancestor (a scrolled Flickable/ListView
+    // with clip:true, or any other clipping container). Non-clipping ancestors
+    // genuinely let content overflow and be seen, so they are not intersected.
+    for (const QQuickItem* ancestor = item->parentItem(); ancestor; ancestor = ancestor->parentItem()) {
+        if (ancestor->clip()) {
+            const QRectF ancestorRect
+                = ancestor->mapRectToScene(QRectF(0, 0, ancestor->width(), ancestor->height()));
+            visibleRect = visibleRect.intersected(ancestorRect);
+        }
+    }
+
+    return visibleRect.width() > 0 && visibleRect.height() > 0;
+}
+
+bool QtItem::ensureVisibleInViewport()
+{
+    QQuickItem* item = qquickitem();
+    if (!item) {
+        return false;
+    }
+
+    // Nudge every scrollable ancestor (innermost first) so the item's rect ends
+    // up inside its viewport. Handles nested scrollers.
+    for (QQuickItem* ancestor = item->parentItem(); ancestor; ancestor = ancestor->parentItem()) {
+        if (ancestor->inherits("QQuickFlickable")) {
+            scrollFlickableToShow(ancestor, item);
+        }
+    }
+
+    return visibleOnScreen();
 }
 
 QQuickItem* QtItem::qquickitem()

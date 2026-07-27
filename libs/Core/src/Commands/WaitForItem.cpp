@@ -30,14 +30,21 @@ bool WaitForItem::canExecuteNow(CommandEnvironment& env)
         return false;
     }
 
+    // Done as soon as the item both exists and is visible.
     auto item = env.scene().itemAtPath(m_path);
-    if (item) {
-        m_itemFound = item->visible();
+    if (item && item->visible()) {
+        m_itemFound = true;
         return true;
     }
 
+    // Otherwise keep waiting (item missing, or present but not yet visible)
+    // until the timeout elapses, then report failure.
     auto timeSinceStart = std::chrono::steady_clock::now() - m_startTime;
-    return timeSinceStart >= m_maxWaitTime;
+    if (timeSinceStart >= m_maxWaitTime) {
+        m_itemFound = false;
+        return true;
+    }
+    return false;
 }
 
 } // namespace cmd

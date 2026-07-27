@@ -11,11 +11,13 @@
 #include <Commands/ClickOnItem.h>
 #include <Commands/ClickAndHoldOnItem.h>
 #include <Commands/Scroll.h>
+#include <Commands/ScrollIntoView.h>
 #include <Commands/CustomCmd.h>
 #include <Commands/DragBegin.h>
 #include <Commands/DragEnd.h>
 #include <Commands/DropFromExt.h>
 #include <Commands/EnterKey.h>
+#include <Commands/Exists.h>
 #include <Commands/ExistsAndVisible.h>
 #include <Commands/GetBoundingBox.h>
 #include <Commands/GetProperty.h>
@@ -102,6 +104,11 @@ void TestServer::mouseScroll(ItemPath path, int angle)
     m_cmdExec->enqueueCommand<cmd::Scroll>(path, angle);
 }
 
+void TestServer::scrollIntoView(ItemPath path)
+{
+    m_cmdExec->enqueueCommand<cmd::ScrollIntoView>(path);
+}
+
 void TestServer::mouseBeginDrag(ItemPath path)
 {
     m_cmdExec->enqueueCommand<cmd::DragBegin>(path);
@@ -163,6 +170,16 @@ Rect TestServer::getBoundingBox(ItemPath path)
     std::promise<Rect> promise;
     auto result = promise.get_future();
     auto cmd = std::make_unique<cmd::GetBoundingBox>(path, std::move(promise));
+    m_cmdExec->enqueueCommand(std::move(cmd));
+
+    return result.get();
+}
+
+bool TestServer::exists(ItemPath path)
+{
+    std::promise<bool> promise;
+    auto result = promise.get_future();
+    auto cmd = std::make_unique<cmd::Exists>(path, std::move(promise));
     m_cmdExec->enqueueCommand(std::move(cmd));
 
     return result.get();

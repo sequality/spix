@@ -28,6 +28,8 @@ public:
     void setStringProperty(const std::string& name, const std::string& value) override;
     bool invokeMethod(const std::string& method, const std::vector<Variant>& args, Variant& ret) override;
     bool visible() const override;
+    bool visibleOnScreen() const override;
+    bool ensureVisibleInViewport() override;
 
     QQuickItem* qquickitem();
     const QQuickItem* qquickitem() const;

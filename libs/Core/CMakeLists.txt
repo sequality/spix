@@ -37,6 +37,8 @@ set(SOURCES
     src/Commands/DropFromExt.h
     src/Commands/EnterKey.cpp
     src/Commands/EnterKey.h
+    src/Commands/Exists.cpp
+    src/Commands/Exists.h
     src/Commands/ExistsAndVisible.cpp
     src/Commands/ExistsAndVisible.h
     src/Commands/GetBoundingBox.cpp
@@ -65,6 +67,8 @@ set(SOURCES
     src/Commands/Synchronize.h
     src/Commands/Scroll.cpp
     src/Commands/Scroll.h
+    src/Commands/ScrollIntoView.cpp
+    src/Commands/ScrollIntoView.h
     src/Commands/ClearErrors.cpp
     src/Commands/ClearErrors.h
 

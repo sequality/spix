@@ -18,6 +18,19 @@ ScreenshotAsBase64::ScreenshotAsBase64(ItemPath targetItemPath, std::promise<std
 
 void ScreenshotAsBase64::execute(CommandEnvironment& env)
 {
+    auto item = env.scene().itemAtPath(m_itemPath);
+    if (!item) {
+        env.state().reportError("ScreenshotAsBase64: Item not found: " + m_itemPath.string());
+        m_promise.set_value("");
+        return;
+    }
+    if (!item->visibleOnScreen()) {
+        env.state().reportError("ScreenshotAsBase64: Item not visible on screen (off-viewport, hidden, or zero-size): "
+            + m_itemPath.string());
+        m_promise.set_value("");
+        return;
+    }
+
     auto value = env.scene().takeScreenshotAsBase64(m_itemPath);
     m_promise.set_value(value);
 }
