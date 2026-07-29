@@ -24,6 +24,7 @@ set(HEADERS_PUB ${HEADERS_PUB_ROOT})
 set(SOURCES
     ${HEADERS_PUB}
     src/QtQmlBot.cpp
+    src/MouseClickLogger.cpp
 
     src/FindQtItem.cpp
     src/FindQtItem.h
@@ -47,7 +48,9 @@ source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} PREFIX source FILES ${SOURCES})
 #
 # Qt MOC Files
 #
-cmake_language(CALL "qt${SPIX_QT_MAJOR}_wrap_cpp" MOC_FILES "include/Spix/QtQmlBot.h")
+cmake_language(CALL "qt${SPIX_QT_MAJOR}_wrap_cpp" MOC_FILES
+    "include/Spix/QtQmlBot.h"
+    "include/Spix/MouseClickLogger.h")
 
 #
 # Target
