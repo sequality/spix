@@ -7,6 +7,7 @@
 #include "QtItemTools.h"
 
 #include <QDateTime>
+#include <QMetaMethod>
 #include <QQmlContext>
 #include <QQuickItem>
 #include <QRegularExpression>
@@ -17,6 +18,28 @@ namespace qt {
 
 const QString repeater_class_name = QString("QQuickRepeater");
 const char* item_at_method_name = "itemAt";
+
+namespace {
+
+// Qt6 identifies meta types by QMetaType, Qt5 by type id. Using the type id in Qt6
+// or QMetaType in Qt5 hits deprecated (or missing) overloads, so let the compat
+// helper hand out whatever the current Qt version wants for canConvert()/convert().
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+using MetaTypeIdentifier = QMetaType;
+#else
+using MetaTypeIdentifier = int;
+#endif
+
+MetaTypeIdentifier ParameterMetaType(const QMetaMethod& metaMethod, int index)
+{
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+    return metaMethod.parameterMetaType(index);
+#else
+    return metaMethod.parameterType(index);
+#endif
+}
+
+} // namespace
 
 QQuickItem* RepeaterChildAtIndex(QQuickItem* repeater, int index)
 {
@@ -268,11 +291,11 @@ Variant QMLReturnVariantToVariant(const QMLReturnVariant& var)
 
 bool CanConvertArgTypes(const QMetaMethod& metaMethod, const std::vector<QVariant>& varargs)
 {
-    if ((size_t)metaMethod.parameterCount() != varargs.size())
+    if (metaMethod.parameterCount() != static_cast<int>(varargs.size()))
         return false;
-    for (size_t i = 0; i < (size_t)metaMethod.parameterCount(); i++) {
+    for (int i = 0; i < metaMethod.parameterCount(); i++) {
         auto targetType = metaMethod.parameterType(i);
-        if (targetType != QMetaType::Type::QVariant && !varargs[i].canConvert(metaMethod.parameterMetaType(i)))
+        if (targetType != QMetaType::Type::QVariant && !varargs[i].canConvert(ParameterMetaType(metaMethod, i)))
             return false;
     }
     return true;
@@ -282,7 +305,7 @@ bool GetMethodMetaForArgs(
     const QObject& obj, const std::string& method, const std::vector<QVariant>& varargs, QMetaMethod& ret)
 {
     const QMetaObject* itemMeta = obj.metaObject();
-    for (size_t i = 0; i < (size_t)itemMeta->methodCount(); i++) {
+    for (int i = 0; i < itemMeta->methodCount(); i++) {
         const QMetaMethod methodMeta = itemMeta->method(i);
         if (methodMeta.name().compare(method.data()) == 0 && CanConvertArgTypes(methodMeta, varargs)) {
             ret = methodMeta;
@@ -296,11 +319,11 @@ std::vector<QGenericArgument> ConvertAndCreateQArgumentsForMethod(
     const QMetaMethod& metaMethod, std::vector<QVariant>& varargs)
 {
     std::vector<QGenericArgument> qtArgs;
-    for (size_t i = 0; i < 10; i++) {
-        if (i < varargs.size()) {
+    for (int i = 0; i < 10; i++) {
+        if (i < static_cast<int>(varargs.size())) {
             int targetType = metaMethod.parameterType(i);
             if (targetType != QMetaType::Type::QVariant) {
-                varargs[i].convert(metaMethod.parameterMetaType(i));
+                varargs[i].convert(ParameterMetaType(metaMethod, i));
                 qtArgs.push_back(QGenericArgument(varargs[i].typeName(), varargs[i].data()));
             } else {
                 qtArgs.push_back(QArgument<QVariant>("QVariant", varargs[i]));
